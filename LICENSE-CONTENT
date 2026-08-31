@@ -1,0 +1,30 @@
+# Content license
+
+The **code** in this repository is MIT licensed. See LICENSE.
+
+The **editorial content** is licensed
+[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+That covers the exhibit catalogue in `data/exhibits.json`, including the coined
+names of the moves and their summaries, and the site prose written for
+moation.ai.
+
+You may share and adapt it, including commercially, provided you give
+appropriate credit and link back to https://moation.ai/.
+
+Attribution: Sean Keener, moation.ai.
+
+## What this license does NOT cover
+
+**The word and its definition.** "moation" was coined by Dr. Alex Wissner-Gross
+on 30 August 2026 and the defining text quoted throughout this site is his:
+https://x.com/alexwg/status/2094051899502690804. It is quoted here with
+attribution. Nothing in this repository grants you any rights in his words, and
+this project claims no ownership of the term. If you reuse the definition,
+credit him, not us.
+
+**Collected mentions.** Excerpts of third-party posts stored in the database and
+shown on the site remain the property of their authors. They are quoted briefly,
+with attribution and a link, so that the usage can be seen in context. They are
+never republished in full and are not covered by the CC BY grant above.
+
+**Linked sources.** Anything at a `source_url` belongs to whoever published it.

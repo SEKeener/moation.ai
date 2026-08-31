@@ -73,3 +73,13 @@ Optional secrets, all set with `npx wrangler secret put NAME`: `COLLECT_SECRET`,
 ## Stack
 
 Cloudflare Worker, D1, hourly cron trigger. No framework, no build step. Costs about nothing.
+
+## License
+
+Code is [MIT](LICENSE). Editorial content, including the exhibit catalogue in
+`data/exhibits.json`, is [CC BY 4.0](LICENSE-CONTENT).
+
+Two carve-outs worth stating plainly. The word and its definition belong to
+Dr. Alex Wissner-Gross and are quoted with attribution; this project claims no
+ownership of the term. Collected mentions remain the property of their authors,
+are quoted only in brief with a link, and are never republished in full.
