@@ -5,7 +5,7 @@ A live record of the word **moation** and of the behaviour it names.
 > **moation** *n.* /ˈmoʊtʃən/ (moat + motion)
 > The ability to turn one temporary competitive advantage into the next before the first is competed away. A moat is a position. Moation is a process.
 
-Coined by [Dr. Alex Wissner-Gross](https://x.com/alexwg) on 30 August 2026 in [this post](https://x.com/alexwg/status/2094051899502690804). This site is an independent record, not affiliated with him. The homepage and footer credit him and link the original.
+Coined by [Dr. Alex Wissner-Gross](https://x.com/alexwg) on 30 August 2026 in [this post](https://x.com/alexwg/status/2094051899502690804). This site is an independent record, not affiliated with him, though we have mad love and respect for him. The homepage and footer credit him and link the original.
 
 ## What the site does
 
