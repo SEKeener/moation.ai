@@ -9,11 +9,9 @@
 // Then this runs unattended against the saved profile.
 
 import { chromium } from 'playwright';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { PROFILE_DIR as PROFILE, ensureBase } from './paths.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const PROFILE = process.env.X_PROFILE_DIR || join(HERE, 'state', 'chrome-profile');
+ensureBase();
 
 // We search the bare word, not the hashtag. The coining post carries no
 // hashtag and neither does almost any use of it, so #moation would find close

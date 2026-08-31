@@ -78,15 +78,43 @@ The scraper is a separate trust domain and this word attracts false positives.
 
 ```bash
 npm install && npx playwright install chromium
-npm run x:login          # log in once, by hand; session persists in scraper/state
-npm run x:once           # verify a single scrape
-cp scraper/com.moation.xscrape.plist ~/Library/LaunchAgents/
-# edit the plist: replace REPLACE_WITH_REPO_PATH and REPLACE_WITH_INGEST_KEY
-launchctl load ~/Library/LaunchAgents/com.moation.xscrape.plist
+npm run x:login                      # log in once, by hand
+npm run x:once                       # verify a single scrape
+npm run x:next                       # show today's scheduled times
+INGEST_KEY=... scraper/install-launchd.sh
 ```
 
-`scraper/state/` holds the Chrome profile with live session cookies and is
-gitignored. Never commit it.
+Do not install the launchd job before `x:login` succeeds. With no session the
+scraper throws `SESSION_DEAD`, and because failed slots are deliberately not
+marked done it will relaunch a browser every 15 minutes through the grace
+window. The installer refuses to run if no profile exists.
+
+### Where the session lives
+
+Runtime state, including the Chrome profile holding a live X session, lives in
+`~/.config/moation/` (override with `MOATION_STATE_DIR`), created mode 700. It
+is deliberately outside the repository:
+
+- A public repo should not depend on a single `.gitignore` line to keep session
+  cookies private. Out of the tree, that file is not load-bearing.
+- It survives `git clean -xfd` and re-clones. A wiped session means a fresh
+  login, and re-logins are what draw account challenges.
+- It is not under `~/.xero` or `~/data/knowledge-base`, which sync via
+  Syncthing. The same X session appearing from two machines is a flag.
+
+The committed plist keeps `__REPO__`, `__HOME__` and `__INGEST_KEY__`
+placeholders so a public repo publishes neither the home directory path nor the
+key; `install-launchd.sh` fills them in locally and writes the result mode 600.
+
+### Which account
+
+The scraper uses its own isolated Chrome profile and never touches your real
+browser profiles or their logins. Whoever you authenticate as during `x:login`
+becomes its identity. Use a secondary account: automating a logged-in session is
+against X's terms of service, and any consequence should land somewhere cheap.
+A brand new account that immediately starts automated searching is a familiar
+flagging pattern, so log in and use it normally for a few days before enabling
+the job.
 
 **This is against X's terms of service.** Automating a logged-in session risks
 suspension of whatever account holds it. Use a secondary account.

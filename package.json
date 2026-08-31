@@ -11,7 +11,8 @@
     "seed": "node scripts/seed-exhibits.mjs | wrangler d1 execute moation --remote --command-file=/dev/stdin",
     "x:login": "node scraper/x-scrape.mjs --login",
     "x:once": "node scraper/x-scrape.mjs",
-    "x:tick": "node scraper/run.mjs"
+    "x:tick": "node scraper/run.mjs",
+    "x:next": "node scraper/next-runs.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0",

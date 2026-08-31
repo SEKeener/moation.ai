@@ -9,30 +9,31 @@
        the decision of whether one of the day's four random slots is due. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/bin/node</string>
-    <string>REPLACE_WITH_REPO_PATH/scraper/run.mjs</string>
+    <string>__NODE__</string>
+    <string>__REPO__/scraper/run.mjs</string>
   </array>
 
   <key>StartInterval</key>
   <integer>900</integer>
 
   <key>WorkingDirectory</key>
-  <string>REPLACE_WITH_REPO_PATH</string>
+  <string>__REPO__</string>
 
   <key>EnvironmentVariables</key>
   <dict>
     <key>INGEST_URL</key>
     <string>https://moation.ai/api/ingest</string>
     <key>INGEST_KEY</key>
-    <string>REPLACE_WITH_INGEST_KEY</string>
+    <string>__INGEST_KEY__</string>
     <key>PATH</key>
     <string>/usr/local/bin:/usr/bin:/bin</string>
   </dict>
 
+  <!-- Logs and the Chrome session live in ~/.config/moation, outside the repo. -->
   <key>StandardOutPath</key>
-  <string>REPLACE_WITH_REPO_PATH/scraper/state/xscrape.log</string>
+  <string>__HOME__/.config/moation/xscrape.log</string>
   <key>StandardErrorPath</key>
-  <string>REPLACE_WITH_REPO_PATH/scraper/state/xscrape.err.log</string>
+  <string>__HOME__/.config/moation/xscrape.err.log</string>
 
   <key>RunAtLoad</key>
   <false/>

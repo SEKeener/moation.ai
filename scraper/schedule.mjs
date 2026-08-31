@@ -5,12 +5,11 @@
 // hours, with gaps that a person would plausibly leave, is a much duller
 // signature. This module owns that decision; run.mjs just obeys it.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { BASE, ensureBase } from './paths.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const STATE_DIR = join(HERE, 'state');
+const STATE_DIR = BASE;
 
 export const CONFIG = {
   runsPerDay: 4,
@@ -47,7 +46,7 @@ function pickTimes() {
 
 export function todaysPlan(now = new Date()) {
   const { date } = pacificParts(now);
-  if (!existsSync(STATE_DIR)) mkdirSync(STATE_DIR, { recursive: true });
+  ensureBase();
   const file = join(STATE_DIR, `plan-${date}.json`);
   if (existsSync(file)) return { file, plan: JSON.parse(readFileSync(file, 'utf8')) };
   const plan = { date, slots: pickTimes().map((m) => ({ atMinutes: m, done: false, result: null })) };
