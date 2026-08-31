@@ -1,0 +1,16 @@
+{
+  "name": "moation.ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create moation",
+    "db:init": "wrangler d1 execute moation --remote --file=schema.sql",
+    "db:init:local": "wrangler d1 execute moation --local --file=schema.sql",
+    "seed": "node scripts/seed-exhibits.mjs | wrangler d1 execute moation --remote --command-file=/dev/stdin"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

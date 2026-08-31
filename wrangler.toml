@@ -1,0 +1,24 @@
+name = "moation-ai"
+main = "src/index.js"
+compatibility_date = "2026-08-31"
+
+# Hourly, as specified. Cloudflare cron triggers fire close to the minute,
+# unlike GitHub Actions schedules which drift.
+[triggers]
+crons = ["7 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "moation"
+database_id = "REPLACE_AFTER_CREATE"
+
+[observability]
+enabled = true
+
+# Secrets (set with `wrangler secret put NAME`), all optional:
+#   COLLECT_SECRET       guards /api/collect
+#   BSKY_HANDLE          Bluesky search 403s unauthenticated from some networks
+#   BSKY_APP_PASSWORD
+#   REDDIT_CLIENT_ID     without these, Reddit falls back to old.reddit HTML
+#   REDDIT_CLIENT_SECRET
+#   GITHUB_TOKEN         raises the GitHub search rate limit

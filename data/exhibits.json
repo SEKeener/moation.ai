@@ -1,0 +1,134 @@
+[
+  {
+    "slug": "nvidia-lock-in-ladder",
+    "name": "The Lock-In Ladder",
+    "actor": "NVIDIA",
+    "kind": "company",
+    "from_edge": "compute",
+    "to_edge": "technology",
+    "era": "2006-present",
+    "summary": "A raw GPU performance lead was always going to be matched. NVIDIA spent it building CUDA, so that by the time competitors caught up on silicon the entire research world wrote code that only ran on NVIDIA. The perishable edge bought a durable one, which is now itself being spent on networking and systems.",
+    "source_url": "https://developer.nvidia.com/cuda-toolkit"
+  },
+  {
+    "slug": "aws-overhead-flip",
+    "name": "The Overhead Flip",
+    "actor": "Amazon",
+    "kind": "company",
+    "from_edge": "technology",
+    "to_edge": "distribution",
+    "era": "2002-2006",
+    "summary": "Infrastructure built as a cost centre for retail got turned outward and sold to everyone else. The classic move of converting an internal capability into external distribution before someone else commoditises it.",
+    "source_url": "https://aws.amazon.com/about-aws/"
+  },
+  {
+    "slug": "openai-attention-conversion",
+    "name": "The Attention Conversion",
+    "actor": "OpenAI",
+    "kind": "company",
+    "from_edge": "technology",
+    "to_edge": "capital",
+    "era": "2020-2023",
+    "summary": "A model quality lead measured in months was converted into a consumer land grab, the user numbers into capital, and the capital into compute. Each edge was spent before it eroded. Textbook moation, run at a cadence nobody had attempted before.",
+    "source_url": "https://openai.com/index/chatgpt/"
+  },
+  {
+    "slug": "google-data-flywheel",
+    "name": "The Data Flywheel",
+    "actor": "Google",
+    "kind": "company",
+    "from_edge": "technology",
+    "to_edge": "data",
+    "era": "1998-present",
+    "summary": "PageRank was publishable and therefore copyable. What was not copyable was the query log it produced once enough people used it. The algorithm bought the data, and the data outlived the algorithm.",
+    "source_url": "https://research.google/pubs/"
+  },
+  {
+    "slug": "apple-silicon-turn",
+    "name": "The Silicon Turn",
+    "actor": "Apple",
+    "kind": "company",
+    "from_edge": "distribution",
+    "to_edge": "compute",
+    "era": "2008-2020",
+    "summary": "iPhone volume was the edge. Apple spent it buying P.A. Semi and funding a decade of in-house chip design, converting unit distribution into a compute advantage the rest of the phone industry cannot buy off the shelf.",
+    "source_url": "https://www.apple.com/newsroom/2020/11/apple-unleashes-m1/"
+  },
+  {
+    "slug": "tsmc-node-treadmill",
+    "name": "The Node Treadmill",
+    "actor": "TSMC",
+    "kind": "company",
+    "from_edge": "capital",
+    "to_edge": "technology",
+    "era": "1987-present",
+    "summary": "Fab capex buys a process node lead, the node lead wins the customers whose prepayments fund the next node. The edge is never held, only rolled forward. Stop rolling for one generation and the whole position collapses.",
+    "source_url": "https://www.tsmc.com/english/dedicatedFoundry"
+  },
+  {
+    "slug": "stripe-developer-beachhead",
+    "name": "The Developer Beachhead",
+    "actor": "Stripe",
+    "kind": "company",
+    "from_edge": "technology",
+    "to_edge": "distribution",
+    "era": "2010-present",
+    "summary": "A seven-line integration was a temporary developer-experience edge in a market where everyone eventually ships a decent SDK. Stripe spent it acquiring the startups that later became enterprises, converting DX into distribution before the DX gap closed.",
+    "source_url": "https://stripe.com/docs"
+  },
+  {
+    "slug": "tesla-fleet-turn",
+    "name": "The Fleet Turn",
+    "actor": "Tesla",
+    "kind": "company",
+    "from_edge": "distribution",
+    "to_edge": "data",
+    "era": "2014-present",
+    "summary": "An early EV lead was going to be competed away by every incumbent automaker at once. The cars already sold were converted into a fleet-miles data asset that the incumbents could not retroactively acquire.",
+    "source_url": "https://www.tesla.com/AI"
+  },
+  {
+    "slug": "netflix-pipe-to-catalog",
+    "name": "The Pipe-to-Catalog Turn",
+    "actor": "Netflix",
+    "kind": "company",
+    "from_edge": "distribution",
+    "to_edge": "technology",
+    "era": "2007-2013",
+    "summary": "Netflix converted a DVD-by-mail subscriber list into a streaming subscriber list, then converted streaming distribution into original content, each time moving one step ahead of the licensors who were about to reprice its supply. Two conversions in six years.",
+    "source_url": "https://about.netflix.com/en/company"
+  },
+  {
+    "slug": "musk-capital-carry",
+    "name": "The Capital Carry",
+    "actor": "Elon Musk",
+    "kind": "person",
+    "from_edge": "capital",
+    "to_edge": "capital",
+    "era": "1999-present",
+    "summary": "The individual-level version: one liquidity event funds the next venture before the first company's relevance decays. The edge being rolled is not a product position at all, it is the proceeds and the credibility that came with them.",
+    "source_url": "https://en.wikipedia.org/wiki/Elon_Musk"
+  },
+  {
+    "slug": "coding-agents-usage-loop",
+    "name": "The Usage Loop",
+    "actor": "Coding agents",
+    "kind": "agent",
+    "from_edge": "technology",
+    "to_edge": "data",
+    "era": "2023-present",
+    "summary": "Model quality wins developer adoption, adoption produces accept and reject signal on real code in real repositories, and that signal trains the next model. A frontier lead measured in weeks gets converted into a preference dataset nobody without the users can assemble.",
+    "source_url": "https://www.anthropic.com/claude-code"
+  },
+  {
+    "slug": "bell-labs-talent-turn",
+    "name": "The Talent Turn",
+    "actor": "Bell Labs",
+    "kind": "company",
+    "from_edge": "capital",
+    "to_edge": "talent",
+    "era": "1925-1984",
+    "summary": "A regulated monopoly's excess profits were converted into the densest concentration of research talent in industrial history, which produced the transistor, information theory and Unix. The monopoly was temporary. The intellectual output outlived it by decades.",
+    "source_url": "https://www.bell-labs.com/about/history/"
+  }
+]
