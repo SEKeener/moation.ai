@@ -42,6 +42,55 @@ Never trust an upstream relevance score. Filter on the text you actually receive
 | Reddit | optional OAuth | `www.reddit.com/search.json` now serves HTML to anonymous browser-UA requests. Falls back to scraping old.reddit, which still works. |
 | X | **no free search** | The origin post's engagement is tracked hourly via the unauthenticated syndication endpoint, which exposes likes and replies only. Full search needs X API Basic at $200/mo, which is not worth it until volume justifies it. |
 
+## The X scraper
+
+X is where the word actually lives and it is the one platform with no free
+search. An anonymous fetch of `/search?q=moation` returns a JavaScript shell with
+no result data, and the API tier that would give us search is $200/mo. So search
+runs through a real logged-in browser on a Mac, not on the Worker (Workers have
+no browser, and Cloudflare Browser Rendering would give us a fresh session that
+hits the same login wall).
+
+It searches the bare word, not `#moation`. The coining post carries no hashtag
+and neither does almost any use of it.
+
+**Four runs a day at random times inside a PST waking window**, rather than
+hourly, because a request landing at :00 every hour is trivially identifiable as
+automation. `scraper/schedule.mjs` draws four times per day between 08:00 and
+22:00 PST with a minimum 75 minute gap, launchd ticks every 15 minutes, and
+`run.mjs` fires only when a slot is due, plus a few minutes of jitter. Slots
+missed while the Mac slept run late within a two hour grace window rather than
+firing all at once.
+
+### The failure mode this guards against
+
+If the session expires or X changes its DOM, the scraper returns zero results.
+On this site zero is a completely plausible number, so a broken scraper looks
+exactly like a quiet week and you could sit blind for a month. Every run
+therefore also issues a control query for a term guaranteed to have recent hits.
+If the control comes back empty the run is treated as failed and discarded, and
+the ingest endpoint refuses any batch whose `control_count` is zero.
+
+The Worker re-applies the full `accept()` gate to everything the scraper sends.
+The scraper is a separate trust domain and this word attracts false positives.
+
+### Setting it up
+
+```bash
+npm install && npx playwright install chromium
+npm run x:login          # log in once, by hand; session persists in scraper/state
+npm run x:once           # verify a single scrape
+cp scraper/com.moation.xscrape.plist ~/Library/LaunchAgents/
+# edit the plist: replace REPLACE_WITH_REPO_PATH and REPLACE_WITH_INGEST_KEY
+launchctl load ~/Library/LaunchAgents/com.moation.xscrape.plist
+```
+
+`scraper/state/` holds the Chrome profile with live session cookies and is
+gitignored. Never commit it.
+
+**This is against X's terms of service.** Automating a logged-in session risks
+suspension of whatever account holds it. Use a secondary account.
+
 ## Setup
 
 ```bash

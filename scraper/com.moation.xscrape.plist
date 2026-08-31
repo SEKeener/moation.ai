@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.moation.xscrape</string>
+
+  <!-- Ticks every 15 minutes and almost always exits immediately. run.mjs owns
+       the decision of whether one of the day's four random slots is due. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>REPLACE_WITH_REPO_PATH/scraper/run.mjs</string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>900</integer>
+
+  <key>WorkingDirectory</key>
+  <string>REPLACE_WITH_REPO_PATH</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>INGEST_URL</key>
+    <string>https://moation.ai/api/ingest</string>
+    <key>INGEST_KEY</key>
+    <string>REPLACE_WITH_INGEST_KEY</string>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>REPLACE_WITH_REPO_PATH/scraper/state/xscrape.log</string>
+  <key>StandardErrorPath</key>
+  <string>REPLACE_WITH_REPO_PATH/scraper/state/xscrape.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>
