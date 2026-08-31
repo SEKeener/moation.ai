@@ -130,7 +130,7 @@ footer p{max-width:64ch}
   <p class="word">moation</p>
   <p class="pron">/&#712;mo&#650;t&#643;&#601;n/ &#183; <span class="pos">noun</span> &#183; moat + motion</p>
   <p class="def">The ability to turn one temporary competitive advantage into the next before the first is competed away. <strong>A moat is a position. Moation is a process.</strong> It means continuously using today's transient edge in capital, talent, compute, data, distribution, or technology to create tomorrow's.</p>
-  <p class="credit">Coined by <a href="https://x.com/alexwg" rel="noopener">Dr. Alex Wissner-Gross</a> on 30 August 2026, in <a href="${TWEET_URL}" rel="noopener">this post</a>: "In the Singularity, there may be no permanent moats. Only moation." This site is an independent record of the word and the behaviour, not affiliated with him.</p>
+  <p class="credit">Coined by <a href="https://x.com/alexwg" rel="noopener">Dr. Alex Wissner-Gross</a> on 30 August 2026, in <a href="${TWEET_URL}" rel="noopener">this post</a>: "In the Singularity, there may be no permanent moats. Only moation." This site is an independent record of the word and the behaviour, not affiliated with him, though we have mad love and respect for him.</p>
 </header>
 
 <section>
