@@ -2,15 +2,24 @@ name = "moation-ai"
 main = "src/index.js"
 compatibility_date = "2026-08-31"
 
-# Hourly, as specified. Cloudflare cron triggers fire close to the minute,
-# unlike GitHub Actions schedules which drift.
+# Custom domains, attached via the account-scoped
+# /accounts/{id}/workers/domains/records endpoint. Pinned here so a redeploy
+# never drops them.
+routes = [
+  { pattern = "moation.ai", custom_domain = true },
+  { pattern = "www.moation.ai", custom_domain = true },
+]
+
+# Hourly. Cloudflare cron triggers fire close to the minute, unlike GitHub
+# Actions schedules which drift. This covers the six free API sources; the X
+# scraper runs separately, four times a day, from a Mac.
 [triggers]
 crons = ["7 * * * *"]
 
 [[d1_databases]]
 binding = "DB"
 database_name = "moation"
-database_id = "REPLACE_AFTER_CREATE"
+database_id = "bc295c9a-db07-492b-b134-c331cafa0720"
 
 [observability]
 enabled = true
