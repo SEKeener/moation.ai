@@ -34,12 +34,50 @@ async function runCollection(env) {
 // Exhibits live in git, not in the CMS. Sync them into D1 on every request path
 // that needs them is wasteful, so we just read the JSON directly. D1 holds the
 // table for future querying, seeded by `npm run seed`.
+// Which sources the hourly job is expected to reach. X is not in here: it is
+// collected by a separate scraper on a Mac and is reported on its own terms.
+const API_SOURCES = ['hn', 'bluesky', 'reddit', 'news', 'github', 'mastodon'];
+
+// Health is judged over the last day of runs, not the most recent one. Reddit
+// fails about 40% of the time and Google News about 68%, so a single sample
+// would call a badly degraded source healthy whenever it happened to land on a
+// good hour.
+function sourceHealth(runRows) {
+  const agg = Object.fromEntries(API_SOURCES.map((s) => [s, { ok: 0, err: 0, lastError: null }]));
+  for (const row of runRows) {
+    let detail;
+    try { detail = JSON.parse(row.detail || '{}'); } catch { continue; }
+    for (const s of API_SOURCES) {
+      const v = detail[s];
+      if (!v) continue;
+      if (v.error) { agg[s].err++; agg[s].lastError ||= v.error; }
+      else agg[s].ok++;
+    }
+  }
+  const sources = API_SOURCES.map((s) => ({
+    name: s,
+    ...agg[s],
+    status: agg[s].ok === 0 ? 'down' : agg[s].err > 0 ? 'flaky' : 'ok',
+  }));
+  return {
+    sources,
+    total: API_SOURCES.length,
+    reporting: sources.filter((s) => s.status !== 'down').length,
+    window: runRows.length,
+  };
+}
+
 async function page(env) {
-  const [rows, seedRow, runRow, countRow] = await Promise.all([
+  const [rows, seedRow, runRow, countRow, healthRows, xRow] = await Promise.all([
     env.DB.prepare(`SELECT source, external_id, url, author, title, excerpt, created_at FROM mentions ORDER BY created_at DESC LIMIT 60`).all(),
     env.DB.prepare(`SELECT * FROM seed_metrics ORDER BY captured_at DESC LIMIT 1`).first(),
     env.DB.prepare(`SELECT started_at FROM runs ORDER BY started_at DESC LIMIT 1`).first(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM mentions`).first(),
+    env.DB.prepare(`SELECT detail FROM runs ORDER BY started_at DESC LIMIT 24`).all(),
+    // Only the scraper's ingest path writes a `control` key, so this is the one
+    // marker that distinguishes a real X run from the seed-metrics error branch,
+    // which also writes a detail.x entry when the syndication fetch fails.
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM runs WHERE detail LIKE '%"control"%'`).first(),
   ]);
   return {
     exhibits: EXHIBITS,
@@ -47,6 +85,8 @@ async function page(env) {
     counts: { total: countRow?.n || 0 },
     seed: seedRow,
     lastRun: runRow?.started_at || null,
+    health: sourceHealth(healthRows.results || []),
+    xConfigured: (xRow?.n || 0) > 0,
   };
 }
 

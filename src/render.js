@@ -41,9 +41,26 @@ function exhibitCards(exhibits) {
   </article>`).join('');
 }
 
-function mentionList(mentions) {
+function sourceStrip(health, xConfigured) {
+  const dot = { ok: 'ok', flaky: 'flaky', down: 'down' };
+  const items = health.sources.map((s) => {
+    const label = SOURCE_LABEL[s.name] || s.name;
+    const note = s.status === 'down' ? esc(s.lastError || 'not reporting')
+      : s.status === 'flaky' ? `${Math.round((s.ok / (s.ok + s.err)) * 100)}% of runs`
+      : 'reporting';
+    return `<li class="src ${dot[s.status]}"><span class="dot"></span><b>${esc(label)}</b><span class="note">${note}</span></li>`;
+  }).join('');
+  const x = `<li class="src ${xConfigured ? 'ok' : 'off'}"><span class="dot"></span><b>X</b><span class="note">${xConfigured ? 'reporting' : 'not configured'}</span></li>`;
+  return `<ul class="srcs">${items}${x}</ul>`;
+}
+
+function mentionList(mentions, health) {
   if (!mentions.length) {
-    return `<p class="empty-state">No uses of the word have been recorded outside X yet. That is expected, and it is the point: collection started on day 1, so whatever happens next is on the record from the beginning. Checked hourly across Hacker News, Bluesky, Reddit, Google News, GitHub and Mastodon.</p>`;
+    const gaps = health.sources.filter((s) => s.status === 'down').map((s) => SOURCE_LABEL[s.name] || s.name);
+    const caveat = gaps.length
+      ? ` This is not a complete picture: ${gaps.length === 1 ? `${esc(gaps[0])} is` : `${esc(gaps.join(' and '))} are`} not currently reporting, so a zero here means nothing has been seen where we can see, not that nothing exists.`
+      : '';
+    return `<p class="empty-state">No uses of the word have been recorded yet. Collection started on day 1, so whatever happens next is on the record from the beginning.${caveat}</p>`;
   }
   return `<ul class="mentions">${mentions.map((m) => `
     <li>
@@ -54,7 +71,7 @@ function mentionList(mentions) {
     </li>`).join('')}</ul>`;
 }
 
-export function homepage({ exhibits, mentions, counts, seed, lastRun }) {
+export function homepage({ exhibits, mentions, counts, seed, lastRun, health, xConfigured }) {
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'DefinedTerm',
@@ -119,6 +136,16 @@ table.matrix td a{display:block;font-size:11px;line-height:1.45;white-space:nowr
 .m-src{font:500 12px/1 ui-monospace,Menlo,monospace;text-transform:uppercase;letter-spacing:.1em}
 .m-au,.mentions time{color:var(--dim);font-size:12px;margin-left:9px}
 .mentions p{margin:7px 0 0;font-size:15px}
+.srcs{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-wrap:wrap;gap:7px}
+.srcs .src{display:flex;align-items:center;gap:7px;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.srcs .src b{font-weight:500}
+.srcs .note{color:var(--dim)}
+.srcs .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--dim)}
+.srcs .ok .dot{background:var(--acc)}
+.srcs .flaky .dot{background:#d8a33c}
+.srcs .down .dot{background:#d15c4e}
+.srcs .off .dot{background:transparent;border:1px solid var(--dim)}
+.stat.warn b{color:#d8a33c}
 .empty-state{color:var(--dim);font-size:15px;max-width:62ch;margin:0;padding:18px;background:var(--card);border-radius:5px}
 footer{padding:38px 0 70px;font-size:13px;color:var(--dim)}
 footer p{max-width:64ch}
@@ -138,6 +165,7 @@ footer p{max-width:64ch}
   <div class="stats">
     <div class="stat"><b>${day()}</b><span>day of record</span></div>
     <div class="stat"><b>${counts.total}</b><span>uses collected</span></div>
+    <div class="stat ${health.reporting < health.total ? 'warn' : ''}"><b>${health.reporting}/${health.total}</b><span>sources reporting</span></div>
     <div class="stat"><b>${exhibits.length}</b><span>exhibits named</span></div>
     ${seed ? `<div class="stat"><b>${seed.favorite_count ?? '-'}</b><span>likes on the origin post</span></div>` : ''}
   </div>
@@ -157,8 +185,9 @@ footer p{max-width:64ch}
 
 <section>
   <h2>Uses of the word</h2>
-  <p class="lede">Every recorded use of "moation" in the wild, newest first. Collected hourly. Matched strictly, because "moation" is one letter from "motion" and search APIs will confidently hand you thousands of the wrong thing.</p>
-  ${mentionList(mentions)}
+  <p class="lede">Every recorded use of "moation" in the wild, newest first. Collected hourly. Matched strictly, because "moation" is one letter from "motion" and search APIs will confidently hand you thousands of the wrong thing. Source status below covers the last ${health.window} runs, so a count here is only ever as good as its coverage.</p>
+  ${sourceStrip(health, xConfigured)}
+  ${mentionList(mentions, health)}
 </section>
 
 <footer>

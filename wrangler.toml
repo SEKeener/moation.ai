@@ -2,13 +2,11 @@ name = "moation-ai"
 main = "src/index.js"
 compatibility_date = "2026-08-31"
 
-# Custom domains, attached via the account-scoped
-# /accounts/{id}/workers/domains/records endpoint. Pinned here so a redeploy
-# never drops them.
-routes = [
-  { pattern = "moation.ai", custom_domain = true },
-  { pattern = "www.moation.ai", custom_domain = true },
-]
+# Custom domains (moation.ai, www.moation.ai) are attached out of band via the
+# account-scoped /accounts/{id}/workers/domains/records endpoint and persist
+# across deploys on their own. Do NOT declare them as `routes` here: wrangler
+# then reconciles them through /zones/{id}/workers/routes, which this token has
+# no zone permission for, and every deploy fails.
 
 # Hourly. Cloudflare cron triggers fire close to the minute, unlike GitHub
 # Actions schedules which drift. This covers the six free API sources; the X

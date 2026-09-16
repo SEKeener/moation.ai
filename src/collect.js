@@ -14,6 +14,24 @@ async function t(url, init = {}) {
   return r.text();
 }
 
+// Google throttles Cloudflare egress hard: measured over 18 days of hourly runs,
+// Google News 503'd on 136 of 200 attempts while working fine from a laptop.
+// The failures are transient, so a couple of backed-off retries recover most of
+// them. Only retries 5xx; a 4xx means we are wrong, not rate limited.
+async function withRetry(fn, { attempts = 3, baseMs = 800 } = {}) {
+  let last;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      last = e;
+      if (!/\b5\d\d\b/.test(String(e.message || e))) throw e;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, baseMs * Math.pow(2, i) + Math.random() * 400));
+    }
+  }
+  throw last;
+}
+
 // Hacker News via Algolia. MUST use the quoted query; the unquoted one is
 // typo-tolerant and returns tens of thousands of "motion" hits.
 async function hn() {
@@ -102,7 +120,8 @@ async function reddit(env) {
 
 // Google News RSS. Free, no key, covers blogs and press that get indexed.
 async function news() {
-  const xml = await t('https://news.google.com/rss/search?q=%22moation%22&hl=en-US&gl=US&ceid=US:en');
+  const xml = await withRetry(() =>
+    t('https://news.google.com/rss/search?q=%22moation%22&hl=en-US&gl=US&ceid=US:en'));
   const out = [];
   const re = /<item>([\s\S]*?)<\/item>/g;
   let m;
