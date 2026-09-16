@@ -17,7 +17,7 @@ async function t(url, init = {}) {
 // Google throttles Cloudflare egress hard: measured over 18 days of hourly runs,
 // Google News 503'd on 136 of 200 attempts while working fine from a laptop.
 // The failures are transient, so a couple of backed-off retries recover most of
-// them. Only retries 5xx; a 4xx means we are wrong, not rate limited.
+// them. Retries 5xx and 429; any other 4xx means we are wrong, not throttled.
 async function withRetry(fn, { attempts = 3, baseMs = 800 } = {}) {
   let last;
   for (let i = 0; i < attempts; i++) {
@@ -25,8 +25,11 @@ async function withRetry(fn, { attempts = 3, baseMs = 800 } = {}) {
       return await fn();
     } catch (e) {
       last = e;
-      if (!/\b5\d\d\b/.test(String(e.message || e))) throw e;
-      if (i < attempts - 1) await new Promise((r) => setTimeout(r, baseMs * Math.pow(2, i) + Math.random() * 400));
+      const msg = String(e.message || e);
+      if (!/\b5\d\d\b/.test(msg) && !/\b429\b/.test(msg)) throw e;
+      // 429 means back off properly, not politely.
+      const mult = /\b429\b/.test(msg) ? 4 : 1;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, mult * baseMs * Math.pow(2, i) + Math.random() * 400));
     }
   }
   throw last;
@@ -76,43 +79,67 @@ async function bluesky(env) {
   }));
 }
 
-// Reddit. www.reddit.com/search.json now serves HTML to anonymous browser-UA
-// requests, so use the OAuth API when credentials exist and fall back to the
-// old.reddit HTML, which still works.
-async function reddit(env) {
-  if (env.REDDIT_CLIENT_ID && env.REDDIT_CLIENT_SECRET) {
-    const auth = btoa(`${env.REDDIT_CLIENT_ID}:${env.REDDIT_CLIENT_SECRET}`);
-    const tok = await fetch('https://www.reddit.com/api/v1/access_token', {
-      method: 'POST',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA },
-      body: 'grant_type=client_credentials',
-    }).then((r) => r.json());
-    const d = await j('https://oauth.reddit.com/search?q=%22moation%22&sort=new&limit=100', {
-      headers: { Authorization: `Bearer ${tok.access_token}` },
-    });
-    return (d.data?.children || []).map((c) => ({
-      source: 'reddit',
-      external_id: c.data.id,
-      url: `https://reddit.com${c.data.permalink}`,
-      author: c.data.author,
-      title: c.data.title,
-      raw: `${c.data.title} ${c.data.selftext || ''}`,
-      created_at: new Date(c.data.created_utc * 1000).toISOString(),
-    }));
-  }
-  const html = await t('https://old.reddit.com/search?q=%22moation%22&sort=new');
+// Reddit, via the public search RSS feed.
+//
+// Reddit closed new Data API app creation in 2026 to moderation use cases only,
+// so there is no script-app route any more and no credentials to hold. The
+// search RSS feed is still public and needs no auth.
+//
+// Two measured quirks decide this implementation:
+//
+// 1. The descriptive bot User-Agent gets 200; a browser User-Agent gets 429 on
+//    the identical URL. Reddit rewards identifying yourself and throttles
+//    impersonation, so never disguise this request.
+// 2. A common-word control query is served from Reddit's cache (byte-identical
+//    across calls) and so returns 200 even while our rare query is being 429'd
+//    at origin. A cached control is therefore a useless canary and we do not use
+//    one. The feed distinguishes the two states by itself: HTTP 200 with zero
+//    entries is a trustworthy zero, while 429 or 5xx throws and surfaces as a
+//    source outage rather than as "no mentions".
+//
+// Runs once every three hours rather than hourly. Our query is rare, so it is
+// always uncached and always hits origin, which is exactly the traffic that
+// draws a rate limit. Eight requests a day is plenty to catch a word that has
+// produced nothing in three weeks.
+const REDDIT_EVERY_N_HOURS = 3;
+
+async function reddit() {
+  if (new Date().getUTCHours() % REDDIT_EVERY_N_HOURS !== 0) return { skipped: true };
+
+  const xml = await withRetry(() =>
+    t('https://www.reddit.com/search.rss?q=%22moation%22&sort=new&limit=50'), { attempts: 2, baseMs: 1500 });
+
   const out = [];
-  const re = /<a[^>]+class="search-title[^"]*"[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/g;
-  let m;
-  while ((m = re.exec(html))) {
+  const unesc = (v) => v.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  for (const m of xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
+    const e = m[1];
+    const pick = (tag) => unesc(((e.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`)) || [, ''])[1]))
+      .replace(/<[^>]+>/g, ' ').trim();
+    const link = (e.match(/<link[^>]*href="([^"]+)"/) || [, ''])[1];
+    const id = (e.match(/<id>([\s\S]*?)<\/id>/) || [, link])[1];
+    if (!link) continue;
+
+    // Reddit search returns subreddits (t5_) and accounts alongside posts (t3_)
+    // and comments (t1_). A subreddit entry carries the subreddit's CREATION
+    // date, so one merely named for the word would arrive dated years before the
+    // coinage, or years after for reasons unrelated to any actual use of it.
+    // Only posts and comments are uses of the word.
+    if (!/^t[13]_/.test(id)) continue;
+
+    // <author> wraps <name> and <uri>; taking the whole block appends the URL to
+    // the handle.
+    const author = ((e.match(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>/) || [, ''])[1] || '')
+      .trim().replace(/^\/u\//, '') || null;
+
     out.push({
       source: 'reddit',
-      external_id: m[1],
-      url: m[1],
-      author: null,
-      title: m[2].replace(/<[^>]+>/g, ''),
-      raw: m[2].replace(/<[^>]+>/g, ''),
-      created_at: new Date().toISOString(),
+      external_id: id,
+      url: link.replace(/&amp;/g, '&'),
+      author,
+      title: pick('title'),
+      raw: `${pick('title')} ${pick('content')}`,
+      created_at: pick('updated') || new Date().toISOString(),
     });
   }
   return out;
@@ -185,6 +212,9 @@ export async function collectMentions(env) {
   for (const [name, fn] of Object.entries(SOURCES)) {
     try {
       const items = await fn(env);
+      // A collector may deliberately sit out this run (Reddit is throttle-shy and
+      // goes every third hour). That is not an outage and must not be scored as one.
+      if (items && items.skipped) { detail[name] = { skipped: true }; continue; }
       scanned += items.length;
       const kept = items.filter(accept);
       detail[name] = { scanned: items.length, kept: kept.length };

@@ -42,10 +42,11 @@ function exhibitCards(exhibits) {
 }
 
 function sourceStrip(health, xConfigured) {
-  const dot = { ok: 'ok', flaky: 'flaky', down: 'down' };
+  const dot = { ok: 'ok', flaky: 'flaky', down: 'down', idle: 'idle' };
   const items = health.sources.map((s) => {
     const label = SOURCE_LABEL[s.name] || s.name;
     const note = s.status === 'down' ? esc(s.lastError || 'not reporting')
+      : s.status === 'idle' ? 'every 3h, due'
       : s.status === 'flaky' ? `${Math.round((s.ok / (s.ok + s.err)) * 100)}% of runs`
       : 'reporting';
     return `<li class="src ${dot[s.status]}"><span class="dot"></span><b>${esc(label)}</b><span class="note">${note}</span></li>`;
@@ -145,6 +146,7 @@ table.matrix td a{display:block;font-size:11px;line-height:1.45;white-space:nowr
 .srcs .flaky .dot{background:#d8a33c}
 .srcs .down .dot{background:#d15c4e}
 .srcs .off .dot{background:transparent;border:1px solid var(--dim)}
+.srcs .idle .dot{background:transparent;border:1px solid var(--acc)}
 .stat.warn b{color:#d8a33c}
 .empty-state{color:var(--dim);font-size:15px;max-width:62ch;margin:0;padding:18px;background:var(--card);border-radius:5px}
 footer{padding:38px 0 70px;font-size:13px;color:var(--dim)}

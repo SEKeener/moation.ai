@@ -43,13 +43,16 @@ const API_SOURCES = ['hn', 'bluesky', 'reddit', 'news', 'github', 'mastodon'];
 // would call a badly degraded source healthy whenever it happened to land on a
 // good hour.
 function sourceHealth(runRows) {
-  const agg = Object.fromEntries(API_SOURCES.map((s) => [s, { ok: 0, err: 0, lastError: null }]));
+  const agg = Object.fromEntries(API_SOURCES.map((s) => [s, { ok: 0, err: 0, skipped: 0, lastError: null }]));
   for (const row of runRows) {
     let detail;
     try { detail = JSON.parse(row.detail || '{}'); } catch { continue; }
     for (const s of API_SOURCES) {
       const v = detail[s];
       if (!v) continue;
+      // A skipped run is neither a success nor a failure; it is a source that
+      // deliberately sat this one out. Counting it either way would misreport.
+      if (v.skipped) { agg[s].skipped++; continue; }
       if (v.error) { agg[s].err++; agg[s].lastError ||= v.error; }
       else agg[s].ok++;
     }
@@ -57,7 +60,10 @@ function sourceHealth(runRows) {
   const sources = API_SOURCES.map((s) => ({
     name: s,
     ...agg[s],
-    status: agg[s].ok === 0 ? 'down' : agg[s].err > 0 ? 'flaky' : 'ok',
+    status: agg[s].ok === 0 && agg[s].err === 0 && agg[s].skipped > 0 ? 'idle'
+      : agg[s].ok === 0 ? 'down'
+      : agg[s].err > 0 ? 'flaky'
+      : 'ok',
   }));
   return {
     sources,
