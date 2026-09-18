@@ -103,15 +103,32 @@ async function bluesky(env) {
 // produced nothing in three weeks.
 const REDDIT_EVERY_N_HOURS = 3;
 
-async function reddit() {
-  if (new Date().getUTCHours() % REDDIT_EVERY_N_HOURS !== 0) return { skipped: true };
+async function reddit(env, opts = {}) {
+  if (!opts.force && new Date().getUTCHours() % REDDIT_EVERY_N_HOURS !== 0) return { skipped: true };
 
   const xml = await withRetry(() =>
     t('https://www.reddit.com/search.rss?q=%22moation%22&sort=new&limit=50'), { attempts: 2, baseMs: 1500 });
 
   const out = [];
-  const unesc = (v) => v.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  // Reddit's RSS is double-encoded: HTML entities are escaped again for XML, so
+  // a raw apostrophe arrives as &amp;#39; and one decode pass leaves a visible
+  // &#39; in the excerpt. Decode until stable, and handle numeric entities, not
+  // just the five named ones.
+  const decode = (v) => v
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&amp;/g, '&');
+  const unesc = (v) => {
+    let out = v;
+    for (let i = 0; i < 3; i++) {
+      const next = decode(out);
+      if (next === out) break;
+      out = next;
+    }
+    return out;
+  };
   for (const m of xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
     const e = m[1];
     const pick = (tag) => unesc(((e.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`)) || [, ''])[1]))
@@ -205,13 +222,13 @@ async function mastodon() {
 
 const SOURCES = { hn, bluesky, reddit, news, github, mastodon };
 
-export async function collectMentions(env) {
+export async function collectMentions(env, opts = {}) {
   const detail = {};
   let scanned = 0;
   const candidates = [];
   for (const [name, fn] of Object.entries(SOURCES)) {
     try {
-      const items = await fn(env);
+      const items = await fn(env, opts);
       // A collector may deliberately sit out this run (Reddit is throttle-shy and
       // goes every third hour). That is not an outage and must not be scored as one.
       if (items && items.skipped) { detail[name] = { skipped: true }; continue; }

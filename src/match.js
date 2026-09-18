@@ -20,7 +20,9 @@ export function isRealMention(...fields) {
 // enough to show the usage in context, never the whole post.
 export function excerpt(text, radius = 140) {
   if (!text) return '';
-  const flat = text.replace(/\s+/g, ' ').trim();
+  // Stripping HTML tags replaces them with spaces, so inline markup around the
+  // word leaves "Moation , moat plus motion". Close those gaps before quoting.
+  const flat = text.replace(/\s+/g, ' ').replace(/\s+([,.;:!?%)\]])/g, '$1').replace(/([(\[])\s+/g, '$1').trim();
   const m = flat.match(RE);
   if (!m) return flat.slice(0, radius * 2);
   const at = flat.toLowerCase().indexOf(m[0].toLowerCase());

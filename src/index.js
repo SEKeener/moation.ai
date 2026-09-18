@@ -3,9 +3,9 @@ import { homepage, feed } from './render.js';
 import { accept, excerpt as snip } from './match.js';
 import EXHIBITS from '../data/exhibits.json';
 
-async function runCollection(env) {
+async function runCollection(env, opts = {}) {
   const started = new Date().toISOString();
-  const { candidates, scanned, detail } = await collectMentions(env);
+  const { candidates, scanned, detail } = await collectMentions(env, opts);
 
   let found = 0;
   for (const c of candidates) {
@@ -156,7 +156,9 @@ export default {
       if (!env.COLLECT_SECRET || url.searchParams.get('key') !== env.COLLECT_SECRET) {
         return new Response('forbidden', { status: 403 });
       }
-      return Response.json(await runCollection(env));
+      // ?force=1 overrides a source's own cadence gate (Reddit runs every third
+      // hour), for when a run is needed now rather than on schedule.
+      return Response.json(await runCollection(env, { force: url.searchParams.get('force') === '1' }));
     }
 
     if (url.pathname === '/') {
